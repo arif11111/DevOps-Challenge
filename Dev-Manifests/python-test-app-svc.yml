@@ -4,10 +4,12 @@ metadata:
   name: python-test-app-svc
   namespace: dev  
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: python-test-app
   ports:
     - protocol: TCP
       port: 8000
       targetPort: 8000
+      nodePort: 30005  
+        

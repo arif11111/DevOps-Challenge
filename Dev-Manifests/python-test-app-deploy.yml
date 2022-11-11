@@ -17,9 +17,9 @@ spec:
     spec:
       containers:
       - name: python-test-app
-        image: a5edevopstuts/python-test-appln:v3
+        image: a5edevopstuts/python-test-appln:v4
         ports:
         - containerPort: 8000
         envFrom:
         - configMapRef:
-            name: python-test-app-env-configmap
+            name: python-test-app-configmap

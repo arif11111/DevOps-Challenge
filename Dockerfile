@@ -10,5 +10,5 @@ EXPOSE 8000
 #installing pip libraries
 RUN pip install -r requirements.txt
 
-CMD export $(cat .env | xargs) && python hello.py
+CMD  ["python", "hello.py"]
 
