@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: python-test-app
+  name: python-test-app
+  namespace: prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: python-test-app
+  template:
+    metadata:
+      labels:
+        app: python-test-app
+    spec:
+      containers:
+      - name: python-test-app
+        image: a5edevopstuts/python-test-appln:v3
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: python-test-app-env-configmap

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: python-test-app-configmap
+  namespace: prod
+data:
+  # property-like keys; each key maps to a simple value
+  ENVIRONMENT: "PROD"
+  HOST: "localhost"
+  PORT: "8000"
+  REDIS_HOST: redis.prod.svc.cluster.local
+  REDIS_PORT: "6379"
