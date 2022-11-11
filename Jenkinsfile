@@ -21,10 +21,7 @@ def getnodehost (namespace, servicename) {
 
         sh "[ ! -z \"\$(kubectl get ns ${namespace} -o name 2>/dev/null)\" ] || kubectl create ns ${namespace}"
    }
-    
-
-
-    
+        
 pipeline {
     
     parameters {
@@ -40,14 +37,13 @@ pipeline {
     }
     
     agent { node { label 'master' } }
-
     
         
         
         stage('Git checkout'){
             steps{
                 echo "checkout code"
-                git branch: 'master', credentialsId: 'GitHubID', url: 'https://github.com/arif11111/DevOps-Challenge.git'
+                git branch: 'master', credentialsId: 'GitHubID', url: 'https://github.com/arif11111/go-calc.git'
                 }
                
             }
@@ -87,6 +83,7 @@ pipeline {
                 FileCredentials([credentialsId: 'arn:aws:eks:us-west-2:226945010623:cluster/my-cluster', serverUrl: 'https://9FF1107DA999F3D2A69D1598F94D2F0A.gr7.us-west-2.eks.amazonaws.com']) {
 
                     script{
+                        sed -i -r "s#docker_image#\1 ${DOCKER_REG}/${IMAGE_NAME}:${BUILD_NUMBER}/" .Dev-Manifests/python-test-app-deploy.yml                    
                         namespace = 'dev'
                         createNamespace (namespace)
                         sh 'kubectl apply -f .Dev-Manifests/'
@@ -116,6 +113,7 @@ pipeline {
             steps {  
                 FileCredentials([credentialsId: 'arn:aws:eks:us-west-2:226945010623:cluster/my-cluster', serverUrl: 'https://9FF1107DA999F3D2A69D1598F94D2F0A.gr7.us-west-2.eks.amazonaws.com']) {
                     script{
+                        sed -i -r "s#docker_image#\1 ${DOCKER_REG}/${IMAGE_NAME}:${BUILD_NUMBER}/" .Prod-Manifests/python-test-app-deploy.yml
                         namespace = 'prod'
                         createNamespace (namespace)
                         sh 'kubectl apply -f .Prod-Manifests/'
@@ -131,7 +129,7 @@ pipeline {
                 script {
                     namespace = 'prod'
                     echo "Accessing the status of application in ${namespace} namespace" 
-                    servicename = "${IMAGE_NAME}-service" 
+                    servicename = "${IMAGE_NAME}-svc" 
                     host_ip = getnodehost(namespace, servicename)
                     runcurl(host_ip) 
                     } 		        		                                                                       
