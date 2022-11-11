@@ -46,5 +46,5 @@ class Application(tornado.web.Application):
 if __name__ == "__main__":
     app = Application()
     app.listen(port)
-    print(f"App running: http://{os.getenv('HOST')}:{int(os.getenv('PORT'))}")
+    print("App running: http://{os.getenv('HOST')}:{int(os.getenv('PORT'))}")
     tornado.ioloop.IOLoop.current().start()

@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.7-slim-buster
 
 #creating app directory and copying the source code
 RUN mkdir /app
