@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: python-test-app
-        image: a5edevopstuts/python-test-appln:v4
+        image: docker_image
         ports:
         - containerPort: 8000
         envFrom:
