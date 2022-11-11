@@ -35,7 +35,7 @@ pipeline {
     environment {
 	DOCKER_REG = 'a5edevopstuts' 
         IMAGE_NAME = 'python-test-app'  
-        TEST_LOCAL_PORT = '8081' //local port to test docker image locally 
+        TEST_LOCAL_PORT = '8080' //local port to test docker image locally 
         ID = "${IMAGE_NAME}:${BUILD_NUMBER}"  // container ID for running the docker image locally    
     }
     
@@ -75,7 +75,7 @@ pipeline {
             echo "Pushing ${DOCKER_REG}/${IMAGE_NAME} image to registry"
              withCredentials([usernameColonPassword(credentialsId: 'dockerID', variable: 'docker_credn')]) {
                     sh "docker login"
-                    sh "docker push ${DOCKER_REG}/${IMAGE_NAME}"
+                    sh "docker push ${DOCKER_REG}/${IMAGE_NAME}:${BUILD_NUMBER}"
                 }
             }
         }
@@ -85,9 +85,13 @@ pipeline {
         stage('Deploy to Dev Env') {
             steps {  
                 FileCredentials([credentialsId: 'arn:aws:eks:us-west-2:226945010623:cluster/my-cluster', serverUrl: 'https://9FF1107DA999F3D2A69D1598F94D2F0A.gr7.us-west-2.eks.amazonaws.com']) {
+
+                    script{
                         namespace = 'dev'
                         createNamespace (namespace)
-                        sh 'kubectl apply -f .Dev-Manifests/'        
+                        sh 'kubectl apply -f .Dev-Manifests/'
+
+                    }			  
                 }
             }    
        }
@@ -97,36 +101,41 @@ pipeline {
     	stage('Development Env Test') {
             steps {
                FileCredentials([credentialsId: 'arn:aws:eks:us-west-2:226945010623:cluster/my-cluster', serverUrl: 'https://9FF1107DA999F3D2A69D1598F94D2F0A.gr7.us-west-2.eks.amazonaws.com']) {
-
-   		        echo "Accessing the status of application in ${namespace} namespace"  		        
-                servicename = "${IMAGE_NAME}-service"                   
-                   host_ip = getnodehost(namespace, servicename)
-                   runcurl(host_ip)
+                script {
+                    namespace = 'prod'
+                    echo "Accessing the status of application in ${namespace} namespace" 
+                    servicename = "${IMAGE_NAME}-svc" 
+                    host_ip = getnodehost(namespace, servicename)
+                    runcurl(host_ip) 
+                    } 		        		                                                                       
                 }
             }    
         }
 
-        stage('Deploy to Production Env') {
+        stage('Deploy to Prod Env') {
             steps {  
                 FileCredentials([credentialsId: 'arn:aws:eks:us-west-2:226945010623:cluster/my-cluster', serverUrl: 'https://9FF1107DA999F3D2A69D1598F94D2F0A.gr7.us-west-2.eks.amazonaws.com']) {
-                        namespace = 'PROD'
+                    script{
+                        namespace = 'prod'
                         createNamespace (namespace)
-                        sh 'kubectl apply -f .Dev-Manifests/'        
+                        sh 'kubectl apply -f .Prod-Manifests/'
+                    }			  
                 }
             }    
        }
          
         
-    	stage('Proudction Env Testing') {
-
+    	stage('Prod Env Test') {
             steps {
                FileCredentials([credentialsId: 'arn:aws:eks:us-west-2:226945010623:cluster/my-cluster', serverUrl: 'https://9FF1107DA999F3D2A69D1598F94D2F0A.gr7.us-west-2.eks.amazonaws.com']) {
-
-   		        echo "Accessing the status of application in ${namespace} namespace"  		        
-                servicename = "${IMAGE_NAME}-service"                   
-                   host_ip = getnodehost(namespace, servicename)
-                   runcurl(host_ip)
-           }
-        }            
-    }
+                script {
+                    namespace = 'prod'
+                    echo "Accessing the status of application in ${namespace} namespace" 
+                    servicename = "${IMAGE_NAME}-service" 
+                    host_ip = getnodehost(namespace, servicename)
+                    runcurl(host_ip) 
+                    } 		        		                                                                       
+                }
+            }    
+        }
 }        
