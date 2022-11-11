@@ -102,7 +102,7 @@ pipeline {
             steps {
                FileCredentials([credentialsId: 'arn:aws:eks:us-west-2:226945010623:cluster/my-cluster', serverUrl: 'https://9FF1107DA999F3D2A69D1598F94D2F0A.gr7.us-west-2.eks.amazonaws.com']) {
                 script {
-                    namespace = 'prod'
+                    namespace = 'dev'
                     echo "Accessing the status of application in ${namespace} namespace" 
                     servicename = "${IMAGE_NAME}-svc" 
                     host_ip = getnodehost(namespace, servicename)
