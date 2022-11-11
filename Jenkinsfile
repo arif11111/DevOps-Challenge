@@ -47,7 +47,7 @@ pipeline {
         stage('Git checkout'){
             steps{
                 echo "checkout code"
-                git branch: 'master', credentialsId: 'GitHubID', url: 'https://github.com/arif11111/go-calc.git'
+                git branch: 'master', credentialsId: 'GitHubID', url: 'https://github.com/arif11111/DevOps-Challenge.git'
                 }
                
             }
