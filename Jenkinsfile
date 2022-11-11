@@ -8,7 +8,7 @@ def getnodehost (namespace, servicename) {
         sh """ 
             export NODE_IP="\$(kubectl get nodes --namespace ${namespace} -o jsonpath="{.items[0].status.addresses[0].address}")"
         """
-        host_ip = "http://$NODE_IP:$NODE_PORT/"		    
+        host_ip = "$NODE_IP:$NODE_PORT"		    
 	    }
 	return "$host_ip"
     }
@@ -21,6 +21,20 @@ def getnodehost (namespace, servicename) {
 
         sh "[ ! -z \"\$(kubectl get ns ${namespace} -o name 2>/dev/null)\" ] || kubectl create ns ${namespace}"
    }
+
+    def runcurl (ip_host) {
+
+	    script{
+            repsone=sh(script:"curl -k -s -X GET --url http://$ip_host/")
+            
+            if ($response == '200')
+                echo "Application is running"
+            else
+                echo "Application is unreachable"
+                currentBuild.result = 'ABORTED'
+            fi
+	    }   
+    }
         
 pipeline {
     
@@ -30,10 +44,9 @@ pipeline {
     }
     
     environment {
-	DOCKER_REG = 'a5edevopstuts' 
+	    DOCKER_REG = 'a5edevopstuts' 
         IMAGE_NAME = 'python-test-app'  
-        TEST_LOCAL_PORT = '8080' //local port to test docker image locally 
-        ID = "${IMAGE_NAME}:${BUILD_NUMBER}"  // container ID for running the docker image locally    
+        TEST_LOCAL_PORT = '8000' //local port to test docker image locally 
     }
     
     agent { node { label 'master' } }
@@ -44,8 +57,7 @@ pipeline {
             steps{
                 echo "checkout code"
                 git branch: 'master', credentialsId: 'GitHubID', url: 'https://github.com/arif11111/DevOps-Challenge.git'
-                }
-               
+                }        
             }
 
         stage('Application Test'){
@@ -65,18 +77,20 @@ pipeline {
         }         
               
         
-        stage('Publish Docker Image')
+        stage('Build and Publish Docker Image')
         {
             steps {            
-            echo "Pushing ${DOCKER_REG}/${IMAGE_NAME} image to registry"
-             withCredentials([usernameColonPassword(credentialsId: 'dockerID', variable: 'docker_credn')]) {
+            
+            withCredentials([usernameColonPassword(credentialsId: 'dockerID', variable: 'docker_credn')]) {
+		    echo "Building Image"
+		    sh " docker build -t ${DOCKER_REG}/${IMAGE_NAME}:${BUILD_NUMBER} ." 
+		     
+		    echo "Pushing ${DOCKER_REG}/${IMAGE_NAME} image to registry" 
                     sh "docker login"
                     sh "docker push ${DOCKER_REG}/${IMAGE_NAME}:${BUILD_NUMBER}"
                 }
             }
-        }
-        
-        
+        }               
 
         stage('Deploy to Dev Env') {
             steps {  
@@ -85,7 +99,7 @@ pipeline {
                     script{
                         sed -i -r "s#docker_image#\1 ${DOCKER_REG}/${IMAGE_NAME}:${BUILD_NUMBER}/" .Dev-Manifests/python-test-app-deploy.yml                    
                         namespace = 'dev'
-                        createNamespace (namespace)
+                        createNamespace(namespace)
                         sh 'kubectl apply -f .Dev-Manifests/'
 
                     }			  
